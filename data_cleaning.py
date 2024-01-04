@@ -24,7 +24,7 @@ class DataCleaning:
       data['country_code'] = np.where((data['country_code'].str.len() == 2) & data['country_code'].str.contains('[A-Z]'), data['country_code'], np.nan)
       data['phone_number'] = np.where((data['phone_number']).str.contains('[a-zA-Z]'), np.nan, data['phone_number'])
       data['phone_number'] = data['phone_number'].replace({r'\+44': '0', r'\(': '', r'\)': '', r'-': '', r' ': '', r'\.': ''}, regex=True)
-      data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], '')
+      data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], np.nan)
 
       data['first_name'] = data['first_name'].astype('string')
       data['last_name'] = data['last_name'].astype('string')
