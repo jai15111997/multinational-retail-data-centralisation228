@@ -53,7 +53,7 @@ class SQL_datatype_change:
             
             connection.execute(text('''ALTER TABLE dim_products ALTER COLUMN product_price TYPE float;
                                     ALTER TABLE dim_products ALTER COLUMN weight TYPE float;
-                                    ALTER TABLE dim_products ALTER COLUMN EAN TYPE varchar(13);
+                                    ALTER TABLE dim_products ALTER COLUMN "EAN" TYPE varchar(22);
                                     ALTER TABLE dim_products ALTER COLUMN product_code TYPE varchar(12);
                                     ALTER TABLE dim_products ALTER COLUMN date_added TYPE date;
                                     ALTER TABLE dim_products ALTER COLUMN uuid TYPE uuid USING uuid::uuid;
@@ -69,7 +69,7 @@ class SQL_datatype_change:
                                     ALTER TABLE dim_date_times ALTER COLUMN date_uuid TYPE uuid USING date_uuid::uuid;'''))
             
             connection.execute(text('''ALTER TABLE dim_card_details ALTER COLUMN card_number TYPE varchar(22);
-                                    ALTER TABLE dim_card_details ALTER COLUMN expiry_date TYPE varchar(18);
+                                    ALTER TABLE dim_card_details ALTER COLUMN expiry_date TYPE varchar(19);
                                     ALTER TABLE dim_card_details ALTER COLUMN date_payment_confirmed TYPE date;'''))
 
             connection.execute(text('''ALTER TABLE dim_card_details ADD PRIMARY KEY (card_number);
@@ -78,8 +78,8 @@ class SQL_datatype_change:
                                     ALTER TABLE dim_store_details ADD PRIMARY KEY (store_code);
                                     ALTER TABLE dim_users ADD PRIMARY KEY (user_uuid);'''))
             
-            connection.execute(text('''ALTER TABLE orders_table ADD FOREIGN KEY (card_number) REFERENCES dim_card_details(card_number)
-                                    ALTER TABLE orders_table ADD FOREIGN KEY (date_uuid) REFERENCES dim_date_times(date_uuid)
-                                    ALTER TABLE orders_table ADD FOREIGN KEY (product_code) REFERENCES dim_products(product_code)
-                                    ALTER TABLE orders_table ADD FOREIGN KEY (store_code) REFERENCES dim_store_details(store_code)
-                                    ALTER TABLE orders_table ADD FOREIGN KEY (user_uuid) REFERENCES dim_users(user_uuid)'''))
+            connection.execute(text('''ALTER TABLE orders_table ADD FOREIGN KEY (card_number) REFERENCES dim_card_details(card_number);
+                                    ALTER TABLE orders_table ADD FOREIGN KEY (date_uuid) REFERENCES dim_date_times(date_uuid);
+                                    ALTER TABLE orders_table ADD FOREIGN KEY (product_code) REFERENCES dim_products(product_code);
+                                    ALTER TABLE orders_table ADD FOREIGN KEY (store_code) REFERENCES dim_store_details(store_code);
+                                    ALTER TABLE orders_table ADD FOREIGN KEY (user_uuid) REFERENCES dim_users(user_uuid);'''))

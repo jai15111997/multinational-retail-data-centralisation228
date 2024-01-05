@@ -25,6 +25,7 @@ class DataCleaning:
       data['phone_number'] = np.where((data['phone_number']).str.contains('[a-zA-Z]'), np.nan, data['phone_number'])
       data['phone_number'] = data['phone_number'].replace({r'\+44': '0', r'\(': '', r'\)': '', r'-': '', r' ': '', r'\.': ''}, regex=True)
       data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], np.nan)
+      data.dropna(subset = ['user_uuid'], inplace = True)
 
       data['first_name'] = data['first_name'].astype('string')
       data['last_name'] = data['last_name'].astype('string')
@@ -42,9 +43,11 @@ class DataCleaning:
       return data    
 
    def clean_card_data(self, card_df):
+      
       card_df.dropna(inplace = True)
-
+      card_df['card_number'] = card_df['card_number'].apply(lambda x: str(x).strip('?'))
       card_df['card_number'] = card_df['card_number'].apply(lambda x: int(x) if str(x).isdigit() else np.nan)
+      card_df.dropna(subset = ['card_number'], inplace = True)
       card_df['expiry_date'] = card_df['expiry_date'].apply(lambda x: '01/'+ x)
       def custom_parse(date_str):
          try:
@@ -55,19 +58,20 @@ class DataCleaning:
       card_df['expiry_date'] = pd.to_datetime(card_df['expiry_date'], format= '%d-%m-%Y', errors='coerce')
       card_df['date_payment_confirmed'] = pd.to_datetime(card_df['date_payment_confirmed'], format= '%Y-%m-%d', errors='coerce')
 
-      card_df['card_number'] = card_df['card_number'].astype('Int64')
+      #card_df['card_number'] = card_df['card_number'].astype('Int64')
       card_df['card_provider'] = card_df['card_provider'].astype('string')
 
       card_df.reset_index(drop = True, inplace = True)
       return card_df
 
    def called_clean_store_data(self, all_stores_df):
-
+      
       all_stores_df.drop(['lat'], axis = 1, inplace = True)
       all_stores_df.dropna(inplace = True)
-      all_stores_df['address'] = np.where((all_stores_df['address'] == 'N/A') | (all_stores_df['address'] == 'NULL'), '', all_stores_df['address'])
-      all_stores_df['locality'] = np.where(all_stores_df['locality'].str.contains('[0-9]') | (all_stores_df['locality'] == 'N/A') | (all_stores_df['locality'] == 'NULL'), '', all_stores_df['locality'])
-      all_stores_df['store_code'] = np.where(all_stores_df['store_code'].str.contains('-'), all_stores_df['store_code'], '')
+      all_stores_df['address'] = np.where((all_stores_df['address'] == 'N/A') | (all_stores_df['address'] == 'NULL'), np.nan, all_stores_df['address'])
+      all_stores_df['locality'] = np.where(all_stores_df['locality'].str.contains('[0-9]') | (all_stores_df['locality'] == 'N/A') | (all_stores_df['locality'] == 'NULL'), np.nan, all_stores_df['locality'])
+      all_stores_df['store_code'] = np.where(all_stores_df['store_code'].str.contains('-'), all_stores_df['store_code'], np.nan)
+      all_stores_df.dropna(subset = ['store_code'], inplace = True)
 
       def custom_parse(date_str):
          try:
@@ -77,10 +81,10 @@ class DataCleaning:
          
       all_stores_df['opening_date'] = all_stores_df['opening_date'].apply(custom_parse)
       all_stores_df['opening_date'] = pd.to_datetime(all_stores_df['opening_date'], infer_datetime_format=True, errors='coerce')
-      all_stores_df['store_type'] = all_stores_df['store_type'].apply(lambda x: x if x in ['Super Store', 'Web Portal', 'Local', 'Outlet', 'Mall Kiosk'] else '') 
-      all_stores_df['country_code'] = all_stores_df['country_code'].apply(lambda x: x if x in ['US', 'GB', 'DE'] else '') 
+      all_stores_df['store_type'] = all_stores_df['store_type'].apply(lambda x: x if x in ['Super Store', 'Web Portal', 'Local', 'Outlet', 'Mall Kiosk'] else np.nan) 
+      all_stores_df['country_code'] = all_stores_df['country_code'].apply(lambda x: x if x in ['US', 'GB', 'DE'] else np.nan) 
       all_stores_df['continent'] = all_stores_df['continent'].replace('ee' ,'')
-      all_stores_df['continent'] = all_stores_df['continent'].apply(lambda x: x if x in ['Europe', 'America'] else '')
+      all_stores_df['continent'] = all_stores_df['continent'].apply(lambda x: x if x in ['Europe', 'America'] else np.nan)
 
       all_stores_df['address'] = all_stores_df['address'].astype('string')
       all_stores_df['longitude'] = pd.to_numeric(all_stores_df['longitude'], errors = 'coerce')
@@ -113,10 +117,11 @@ class DataCleaning:
       s3_data['product_name'] = s3_data['product_name'].str.replace('NULL', '')
       s3_data['product_price'] = s3_data['product_price'].str.replace('£', '')
       s3_data['category'] = s3_data['category'].apply(lambda x: x if x in ['toys-and-games', 'sports-and-leisure', 'pets', 'homeware', 'health-and-beauty', 'food-and-drink', 'diy'] else '')
-      s3_data['uuid'] = np.where(s3_data['uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_data['uuid'], '')
+      s3_data['uuid'] = np.where(s3_data['uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_data['uuid'], np.nan)
       s3_data['removed'] = s3_data['removed'].str.replace('avaliable', 'available')
       s3_data['removed'] = s3_data['removed'].apply(lambda x: x if x in ['Still_available', 'Removed'] else '')
-      s3_data['product_code'] = np.where(s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), s3_data['product_code'], '')
+      s3_data['product_code'] = np.where(s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), s3_data['product_code'], np.nan)
+      s3_data.dropna(subset = ['product_code'], inplace = True)
 
       s3_data['product_name'] = s3_data['product_name'].astype('string')
       s3_data['product_price'] = pd.to_numeric(s3_data['product_price'], errors = 'coerce')
@@ -135,10 +140,11 @@ class DataCleaning:
       data = data.drop(['first_name', 'last_name', '1', 'level_0'], axis = 1)
       data.set_index('index', inplace= True)
 
-      data['date_uuid'] = np.where(data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['date_uuid'], '')
-      data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], '')
-      data['store_code'] = np.where(data['store_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['store_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['store_code'], '')
-      data['product_code'] = np.where(data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['product_code'], '')
+      data['date_uuid'] = np.where(data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['date_uuid'], np.nan)
+      data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], np.nan)
+      data['store_code'] = np.where(data['store_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['store_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['store_code'], np.nan)
+      data['product_code'] = np.where(data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['product_code'], np.nan)
+      data.dropna(subset = ['card_number', 'date_uuid', 'product_code', 'store_code', 'user_uuid'], inplace = True)
 
       data['date_uuid'] = data['date_uuid'].astype('string')
       data['user_uuid'] = data['user_uuid'].astype('string')
@@ -154,7 +160,8 @@ class DataCleaning:
       s3_d_data['year'] = pd.to_numeric(s3_d_data['year'], errors = 'coerce')
       s3_d_data['day'] = pd.to_numeric(s3_d_data['day'], errors = 'coerce')
       s3_d_data['time_period'] = s3_d_data['time_period'].apply(lambda x: x if x in ['Evening', 'Morning', 'Late_Hours', 'Midday'] else '')
-      s3_d_data['date_uuid'] = np.where(s3_d_data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_d_data['date_uuid'], '')
+      s3_d_data['date_uuid'] = np.where(s3_d_data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_d_data['date_uuid'], np.nan)
+      s3_d_data.dropna(subset = ['date_uuid'], inplace = True)
 
       s3_d_data['time_period'] = s3_d_data['time_period'].astype('string')
       s3_d_data['date_uuid'] = s3_d_data['date_uuid'].astype('string')

@@ -2,12 +2,15 @@ from database_utils import DatabaseConnector
 from data_cleaning import DataCleaning
 from data_extraction import DataExtractor
 from SQL_Operations import SQL_datatype_change
+from SQL_Queries import SQL_queries
 import pandas as pd
 
 dbc = DatabaseConnector()
 d_ext = DataExtractor()
 d_cl = DataCleaning()
 sql_dtype = SQL_datatype_change()
+sql_q_a = SQL_queries()
+
 pdf_path = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
 header = {'x-api-key' : 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'}
 store_ep = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/'
@@ -54,3 +57,5 @@ s3_d_clean = d_cl.clean_events_data(s3_d_data)
 dbc.upload_to_db(s3_d_clean, 'dim_date_times')
 
 sql_dtype.dtype_change()
+
+sql_q_a.QnA()
