@@ -70,7 +70,7 @@ class SQL_datatype_change:
             
             connection.execute(text('''ALTER TABLE dim_card_details ALTER COLUMN card_number TYPE varchar(22);
                                     ALTER TABLE dim_card_details ALTER COLUMN expiry_date TYPE varchar(19);
-                                    ALTER TABLE dim_card_details ALTER COLUMN date_payment_confirmed TYPE date;'''))
+                                    ALTER TABLE dim_card_details ALTER COLUMN date_payment_confirmed TYPE date USING date_payment_confirmed::date;'''))
 
             connection.execute(text('''ALTER TABLE dim_card_details ADD PRIMARY KEY (card_number);
                                     ALTER TABLE dim_date_times ADD PRIMARY KEY (date_uuid);

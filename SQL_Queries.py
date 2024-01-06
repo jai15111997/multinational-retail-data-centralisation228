@@ -18,34 +18,80 @@ class SQL_queries:
         with eng.execution_options(isolation_level='AUTOCOMMIT').connect() as connection:
             
             print('How many stores does the business have and in which countries?\n')
-            connection.execute(text('''SELECT country_code, COUNT(country_code) AS total_no_stores FROM dim_store_details
-                                       GROUP BY country_code
-                                       ORDER BY total_no_stores DESC'''))
-            
+            q1 = connection.execute(text('''SELECT country_code, COUNT(country_code) AS total_no_stores FROM dim_store_details
+                                            GROUP BY country_code
+                                            ORDER BY total_no_stores DESC'''))
+            print(q1)
+
             print('\nWhich locations currently have the most stores?\n')
-            connection.execute(text('''SELECT locality, COUNT(locality) AS total_no_stores
-                                       FROM dim_store_details
-                                       GROUP BY locality
-                                       ORDER BY total_no_stores DESC
-                                       LIMIT 7'''))
+            q2 =connection.execute(text('''SELECT locality, COUNT(locality) AS total_no_stores
+                                           FROM dim_store_details
+                                           GROUP BY locality
+                                           ORDER BY total_no_stores DESC
+                                           LIMIT 7'''))
+            print(q2)
 
             print('\nWhich months produced the largest amount of sales?\n')
-            connection.execute(text(''''''))
+            q3 =connection.execute(text('''SELECT ROUND(SUM(dim_products.product_price * orders_table.product_quantity)::numeric, 2) AS total_sales, dim_date_times.month
+                                           FROM orders_table
+                                           INNER JOIN dim_date_times ON dim_date_times.date_uuid = orders_table.date_uuid
+                                           INNER JOIN dim_products ON dim_products.product_code = orders_table.product_code
+                                           GROUP BY dim_date_times.month
+                                           ORDER BY total_sales DESC
+                                           LIMIT 6;'''))
+            print(q3)
 
             print('\nHow many sales are coming from online?\n')
-            connection.execute(text(''''''))
+            q4 =connection.execute(text('''SELECT COUNT(orders_table.product_code) AS number_of_sales, SUM(orders_table.product_quantity) AS product_quantity_count,
+                                           CASE 
+                                           WHEN dim_store_details.store_type = 'Web Portal' THEN 'Web'
+                                           ELSE 'Offline'
+                                           END as location
+                                           FROM orders_table
+                                           INNER JOIN dim_store_details ON dim_store_details.store_code = orders_table.store_code
+                                           INNER JOIN dim_products ON dim_products.product_code = orders_table.product_code
+                                           GROUP BY location
+                                           ORDER BY number_of_sales;'''))
+            print(q4)
 
             print('\nWhat percentage of sales come through each type of store?\n')
-            connection.execute(text(''''''))
+            q5 =connection.execute(text('''SELECT dim_store_details.store_type, ROUND(SUM(dim_products.product_price * orders_table.product_quantity)::numeric, 2) AS total_sales,
+                                           ROUND(((SUM(dim_products.product_price * orders_table.product_quantity) * 100) / SUM(SUM(dim_products.product_price * orders_table.product_quantity)) OVER ())::numeric, 2) AS "percentage_total(%)"
+                                           FROM orders_table
+                                           INNER JOIN dim_store_details ON dim_store_details.store_code = orders_table.store_code
+                                           INNER JOIN dim_products ON dim_products.product_code = orders_table.product_code
+                                           GROUP BY dim_store_details.store_type
+                                           ORDER BY total_sales DESC;'''))
+            
+            print(q5)
 
             print('\nWhich month in each year produced the highest cost of sales?\n')
-            connection.execute(text(''''''))
+            q6 =connection.execute(text('''SELECT ROUND(SUM(dim_products.product_price * orders_table.product_quantity)::numeric, 2) AS total_sales, dim_date_times.year, dim_date_times.month
+                                           FROM orders_table
+                                           INNER JOIN dim_date_times ON dim_date_times.date_uuid = orders_table.date_uuid
+                                           INNER JOIN dim_products ON dim_products.product_code = orders_table.product_code
+                                           GROUP BY dim_date_times.year, dim_date_times.month
+                                           ORDER BY total_sales DESC
+                                           LIMIT 10;'''))
+            print(q6)
 
             print('\nWhat is our staff headcount?\n')
-            connection.execute(text(''''''))
+            q7 =connection.execute(text('''SELECT COUNT(DISTINCT(email_address)) AS total_staff_members, country_code
+                                           FROM dim_users
+                                           GROUP BY country_code
+                                           ORDER BY total_staff_members DESC;'''))
+            print(q7)
 
             print('\nWhich German store type is selling the most?\n')
-            connection.execute(text(''''''))
+            q8 =connection.execute(text('''SELECT ROUND(SUM(dim_products.product_price * orders_table.product_quantity)::numeric, 2) AS total_sales, dim_store_details.store_type, dim_store_details.country_code 
+                                           FROM orders_table
+                                           INNER JOIN dim_store_details ON dim_store_details.store_code = orders_table.store_code
+                                           INNER JOIN dim_products ON dim_products.product_code = orders_table.product_code
+                                           WHERE dim_store_details.country_code = 'DE'
+                                           GROUP BY dim_store_details.store_type, dim_store_details.country_code
+                                           ORDER BY total_sales;'''))
+            print(q8)
 
             print('\nHow quickly is the company making sales?\n')
-            connection.execute(text(''''''))
+            q9 =connection.execute(text(''''''))
+            print(q9)
