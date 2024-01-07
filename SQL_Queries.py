@@ -88,10 +88,10 @@ class SQL_queries:
                 print(row)
 
             print('\nWhat is our staff headcount?\n')
-            q7 =connection.execute(text('''SELECT COUNT(DISTINCT(email_address)) AS total_staff_members, country_code
-                                           FROM dim_users
+            q7 =connection.execute(text('''SELECT SUM(staff_numbers) AS total_staff_numbers, country_code
+                                           FROM dim_store_details
                                            GROUP BY country_code
-                                           ORDER BY total_staff_members DESC;'''))
+                                           ORDER BY total_staff_numbers DESC;'''))
             results = q7.fetchall()
             for row in results:
                 print(row)
@@ -109,7 +109,29 @@ class SQL_queries:
                 print(row)
 
             print('\nHow quickly is the company making sales?\n')
-            q9 =connection.execute(text(''''''))
+            q9 =connection.execute(text('''WITH comb_date AS 
+                                           (
+                                           SELECT year,
+                                           CAST(CONCAT( year,'-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp) AS full_date
+                                           FROM dim_date_times 
+                                           INNER JOIN orders_table ON dim_date_times.date_uuid = orders_table.date_uuid
+                                           ORDER BY full_date
+                                           )
+                                           SELECT year,
+                                           (
+                                           CONCAT('hours: ', CAST(ROUND(AVG(EXTRACT(HOUR FROM t_diff))) AS text), 
+                                            ', minutes: ', CAST(ROUND(AVG(EXTRACT(MINUTE FROM t_diff))) AS text), 
+                                            ', seconds: ', CAST(ROUND(AVG(EXTRACT(SECOND FROM t_diff))) AS text))
+                                           ) AS actual_time_taken
+                                           FROM
+                                           (
+                                           SELECT year, full_date, LEAD(full_date) OVER (PARTITION BY year) AS next_date,
+                                           LEAD (full_date) OVER (PARTITION BY year) - full_date AS t_diff
+                                           FROM comb_date
+                                           )
+                                           GROUP BY year
+                                           ORDER BY actual_time_taken DESC
+                                           LIMIT 5;'''))
             results = q9.fetchall()
             for row in results:
                 print(row)

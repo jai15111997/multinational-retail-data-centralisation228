@@ -41,29 +41,9 @@ class DataCleaning:
 
       data.reset_index(drop = True, inplace = True)
       return data    
-   '''
-   def clean_card_data(self, table):
-        #drops the rows with wrong data
-        table = table.drop(table[table['expiry_date'].apply(lambda x: (len(x) > 5) or len(x) == 4)].index.tolist())
-        # removes '?' from card_number
-        table['card_number'] = table['card_number'].apply(lambda x: str(x))
-        table['card_number'] = table['card_number'].apply(lambda x: x.strip('?') if '?' in x else x)
-        #converts the date strings to ISO date format
-        table['date_payment_confirmed'] = table['date_payment_confirmed'].apply(lambda x: pd.to_datetime(x, errors='coerce', infer_datetime_format= True))
-        table['card_number'] = pd.to_numeric(table['card_number'], errors = 'coerce')
-      
-        def custom_parse(date_str):
-            try:
-              return parse(date_str)
-            except ValueError:
-              return pd.NaT
-        table['expiry_date'] = table['expiry_date'].apply(custom_parse)
-        table['expiry_date'] = pd.to_datetime(table['expiry_date'], format= '%d-%m-%Y', errors='coerce').dt.strftime('%m-%d-%Y')
-        return table
-   '''
+ 
    def clean_card_data(self, card_df):
       
-      #card_df['expiry_date'] = np.where(card_df['expiry_date'].str.len() == 5, card_df['expiry_date'], np.nan )
       card_df = card_df.drop(card_df[card_df['expiry_date'].apply(lambda x: (len(x) > 5) or len(x) == 4)].index.tolist())
       card_df['expiry_date'] = card_df['expiry_date'].apply(lambda x: '01/'+ str(x))
       card_df['card_number'] = card_df['card_number'].astype('string')
@@ -88,7 +68,6 @@ class DataCleaning:
    def called_clean_store_data(self, all_stores_df):
       
       all_stores_df.drop(['lat'], axis = 1, inplace = True)
-      #all_stores_df.dropna(inplace = True)
       all_stores_df['address'] = np.where((all_stores_df['address'] == 'N/A') | (all_stores_df['address'] == 'NULL'), np.nan, all_stores_df['address'])
       all_stores_df['locality'] = np.where(all_stores_df['locality'].str.contains('[0-9]') | (all_stores_df['locality'] == 'N/A') | (all_stores_df['locality'] == 'NULL'), np.nan, all_stores_df['locality'])
       all_stores_df['store_code'] = np.where(all_stores_df['store_code'].str.contains('-'), all_stores_df['store_code'], np.nan)
@@ -116,7 +95,6 @@ class DataCleaning:
       all_stores_df['latitude'] = pd.to_numeric(all_stores_df['latitude'], errors = 'coerce')
       all_stores_df['country_code'] = all_stores_df['country_code'].astype('string')
       all_stores_df['continent'] = all_stores_df['continent'].astype('string')
-      #all_stores_df.dropna(inplace = True)
       all_stores_df.reset_index(drop = True, inplace = True)
       return all_stores_df
 
