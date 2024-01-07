@@ -45,7 +45,7 @@ The archival data of users is presently housed in an AWS cloud-based database. T
 The details of users' payment cards are stored in a PDF document within an AWS S3 bucket. The installation of the Python package tabula-py proves instrumental in extracting data from the PDF document. A method is established in the DataExtractor class, accepting a link as an argument and returning a Pandas DataFrame.
 
 ***3. Storing Data through API Utilization:***
-The API comprises two GET methods—one for providing the count of stores in the business and the other for fetching details about a specific store. To connect to the API, the method header needs to incorporate the API key. A header dictionary is created with the 'x-api-key' as the key and its corresponding value. The API endpoints are designed for retrieving a store and returning the total number of stores. A DataExtractor method is developed to determine the count of stores by utilizing the number of stores endpoint and the header dictionary. Another method is crafted to retrieve details about a store using the corresponding endpoint, saving the data into a Pandas DataFrame.
+The API comprises two GET methods—one for providing the count of stores in the business and the other for fetching details about a specific store. To connect to the API, the method header needs to incorporate the API key. A header dictionary is created with the 'x-api-key' as the key and its corresponding value. The API endpoints are designed for retrieving a store and returning the total number of stores. A DataExtractor method is developed to determine the count of stores by utilising the number of stores endpoint and the header dictionary. Another method is crafted to retrieve details about a store using the corresponding endpoint, saving the data into a Pandas DataFrame.
 
 ***4. Extracting Product Details from AWS S3:***
 Information pertaining to each product the company currently offers is stored in CSV format within an S3 bucket on AWS. A DataExtractor method is created, leveraging the boto3 package to download and extract the product information, ultimately returning a Pandas DataFrame. The S3 address for the products data (s3://data-handling-public/products.csv) is passed as an argument to this method.
@@ -64,7 +64,7 @@ To ensure data integrity, several checks and corrections are applied to each dat
 - Removal of columns lacking meaningful data.
 
 ***7. Data Loading:***
-Upon completing the data cleaning process, the dataframes are stored as tables in the pgAdmin 4 sales_data database. SQL queries are then utilized for interacting with these tables.
+Upon completing the data cleaning process, the dataframes are stored as tables in the pgAdmin 4 sales_data database. SQL queries are then utilised for interacting with these tables.
 
 - User details table: dim_users
 - User card details table: dim_card_details
@@ -75,7 +75,7 @@ Upon completing the data cleaning process, the dataframes are stored as tables i
 
 With primary keys prefixed by "dim" in the tables, foreign keys are established in the orders_table to reference primary keys in other tables.
 
-Through the application of SQL, foreign key constraints are implemented, referencing the primary keys of other tables and finalizing the star-based database schema.
+Through the application of SQL, foreign key constraints are implemented, referencing the primary keys of other tables and finalising the star-based database schema.
 
 ***8. Data Analysis:***
 Now that the data has been properly organised, several SQL queries are run to extract up-to-date metrics from the data. This initiative aims to empower the concerned business to made more informed, data-driven decisions and to enhance its comprehension of sales dynamics. In this milestone, the following business queries have been responded to via pgAdmin4 and python:
