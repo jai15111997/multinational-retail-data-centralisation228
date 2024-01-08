@@ -198,7 +198,7 @@ class DataCleaning:
       # Reset index
       data = data.reset_index(drop=True)
       return data
-
+   
    # Clean events data
    def clean_events_data(self, s3_d_data):
 
@@ -209,9 +209,11 @@ class DataCleaning:
       s3_d_data['day'] = pd.to_numeric(s3_d_data['day'], errors = 'coerce')
       s3_d_data['time_period'] = s3_d_data['time_period'].apply(lambda x: x if x in ['Evening', 'Morning', 'Late_Hours', 'Midday'] else np.nan)
       s3_d_data['date_uuid'] = np.where(s3_d_data['date_uuid'].str.contains('-'), s3_d_data['date_uuid'], np.nan)
+      
+      # Dropping null Values
       s3_d_data.dropna(inplace = True)
 
-      # Convert data types
+      # Convert remaining column data types
       s3_d_data['time_period'] = s3_d_data['time_period'].astype('string')
       s3_d_data['date_uuid'] = s3_d_data['date_uuid'].astype('string')
 
