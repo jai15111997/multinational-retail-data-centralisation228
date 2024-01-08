@@ -26,6 +26,7 @@ class SQL_queries:
             # Query 1
             print('How many stores does the business have and in which countries?\n')
             q1 = connection.execute(text('''SELECT country_code, COUNT(country_code) AS total_no_stores FROM dim_store_details
+                                            WHERE address IS NOT NULL
                                             GROUP BY country_code
                                             ORDER BY total_no_stores DESC'''))
             results = q1.fetchall()

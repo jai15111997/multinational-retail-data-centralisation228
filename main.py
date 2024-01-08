@@ -65,7 +65,9 @@ dbc.upload_to_db(ref_data, 'dim_store_details')
 
 # Extract and clean product data from S3
 s3_data = d_ext.extract_from_s3(s3_address)
+# Converting 'ml' and 'g' to 'kg'
 s3_ref = d_cl.convert_product_weights(s3_data)
+# Cleaning products data
 s3_clean = d_cl.clean_products_data(s3_ref)
 # Upload cleaned data to 'dim_products' table
 dbc.upload_to_db(s3_clean, 'dim_products')

@@ -98,9 +98,15 @@ class DataCleaning:
       all_stores_df['opening_date'] = all_stores_df['opening_date'].apply(custom_parse)
       all_stores_df['opening_date'] = pd.to_datetime(all_stores_df['opening_date'], infer_datetime_format=True, errors='coerce')
       all_stores_df['store_type'] = all_stores_df['store_type'].apply(lambda x: x if x in ['Super Store', 'Web Portal', 'Local', 'Outlet', 'Mall Kiosk'] else np.nan) 
-      all_stores_df['country_code'] = all_stores_df['country_code'].apply(lambda x: x if x in ['US', 'GB', 'DE'] else np.nan) 
+      all_stores_df['country_code'] = all_stores_df['country_code'].apply(lambda x: x if x in ['US', 'GB', 'DE'] else np.nan)
       all_stores_df['continent'] = all_stores_df['continent'].apply(lambda x: x.strip('ee') if 'ee' in x else x)
       all_stores_df['continent'] = all_stores_df['continent'].apply(lambda x: x if x in ['Europe', 'America'] else np.nan)
+      err_correction_mapping = {'30e': '30', '80R': "80", 'A97': "97", '3n9': "39", 'J78':'78', 'N/A': np.nan, None: np.nan}
+      # Correcting Errors in Data
+      for column in ['staff_numbers', 'latitude', 'longitude']:
+            all_stores_df[column] = all_stores_df[column].replace(err_correction_mapping)
+      # Dropping Null Values
+      all_stores_df.dropna(subset = ['country_code'], inplace = True)
       
       # Convert data types
       all_stores_df['address'] = all_stores_df['address'].astype('string')
@@ -146,11 +152,12 @@ class DataCleaning:
       # Cleaning operations on string columns
       s3_data['product_name'] = s3_data['product_name'].str.replace('NULL', '')
       s3_data['product_price'] = s3_data['product_price'].str.replace('£', '')
-      s3_data['category'] = s3_data['category'].apply(lambda x: x if x in ['toys-and-games', 'sports-and-leisure', 'pets', 'homeware', 'health-and-beauty', 'food-and-drink', 'diy'] else '')
+      s3_data['category'] = s3_data['category'].apply(lambda x: x if x in ['toys-and-games', 'sports-and-leisure', 'pets', 'homeware', 'health-and-beauty', 'food-and-drink', 'diy'] else np.nan)
       s3_data['uuid'] = np.where(s3_data['uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_data['uuid'], np.nan)
+      # Correcting spelling errors
       s3_data['removed'] = s3_data['removed'].str.replace('avaliable', 'available')
-      s3_data['removed'] = s3_data['removed'].apply(lambda x: x if x in ['Still_available', 'Removed'] else '')
-      s3_data['product_code'] = np.where(s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | s3_data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), s3_data['product_code'], np.nan)
+      s3_data['removed'] = s3_data['removed'].apply(lambda x: x if x in ['Still_available', 'Removed'] else np.nan)
+      s3_data['product_code'] = np.where(s3_data['product_code'].str.contains('-'), s3_data['product_code'], np.nan)
       s3_data.dropna(subset = ['product_code'], inplace = True)
 
       # Convert data types
@@ -175,10 +182,11 @@ class DataCleaning:
       data.set_index('index', inplace= True)
 
       # Cleaning operations on string columns
-      data['date_uuid'] = np.where(data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['date_uuid'], np.nan)
-      data['user_uuid'] = np.where(data['user_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), data['user_uuid'], np.nan)
-      data['store_code'] = np.where(data['store_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['store_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['store_code'], np.nan)
-      data['product_code'] = np.where(data['product_code'].str.match(r'^[a-zA-Z0-9]{2}-[a-zA-Z0-9]{8}$') | data['product_code'].str.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{8}$'), data['product_code'], np.nan)
+      data['date_uuid'] = np.where(data['date_uuid'].str.contains('-'), data['date_uuid'], np.nan)
+      data['user_uuid'] = np.where(data['user_uuid'].str.contains('-'), data['user_uuid'], np.nan)
+      data['store_code'] = np.where(data['store_code'].str.contains('-'), data['store_code'], np.nan)
+      data['product_code'] = np.where(data['product_code'].str.contains('-'), data['product_code'], np.nan)
+      # Dropping Variables for easy Foreign Key Generation
       data.dropna(subset = ['card_number', 'date_uuid', 'product_code', 'store_code', 'user_uuid'], inplace = True)
 
       # Convert data types
@@ -199,9 +207,9 @@ class DataCleaning:
       s3_d_data['month'] = pd.to_numeric(s3_d_data['month'], errors = 'coerce')
       s3_d_data['year'] = pd.to_numeric(s3_d_data['year'], errors = 'coerce')
       s3_d_data['day'] = pd.to_numeric(s3_d_data['day'], errors = 'coerce')
-      s3_d_data['time_period'] = s3_d_data['time_period'].apply(lambda x: x if x in ['Evening', 'Morning', 'Late_Hours', 'Midday'] else '')
-      s3_d_data['date_uuid'] = np.where(s3_d_data['date_uuid'].str.match(r'^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$'), s3_d_data['date_uuid'], np.nan)
-      s3_d_data.dropna(subset = ['date_uuid'], inplace = True)
+      s3_d_data['time_period'] = s3_d_data['time_period'].apply(lambda x: x if x in ['Evening', 'Morning', 'Late_Hours', 'Midday'] else np.nan)
+      s3_d_data['date_uuid'] = np.where(s3_d_data['date_uuid'].str.contains('-'), s3_d_data['date_uuid'], np.nan)
+      s3_d_data.dropna(inplace = True)
 
       # Convert data types
       s3_d_data['time_period'] = s3_d_data['time_period'].astype('string')
