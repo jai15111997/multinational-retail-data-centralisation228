@@ -138,27 +138,34 @@ class SQL_queries:
 
             # Query 9
             print('\nHow quickly is the company making sales?\n')
-            q9 =connection.execute(text('''WITH comb_dates AS 
+            q9 =connection.execute(text('''SELECT year, 
+                                           CONCAT('hours: ', CAST(ROUND(EXTRACT(HOUR FROM t_diff)) AS text), 
+                                           ', minutes: ', CAST(ROUND(EXTRACT(MINUTE FROM t_diff)) AS text), 
+                                           ', seconds: ', CAST(ROUND(EXTRACT(SECOND FROM t_diff)) AS text),
+                                           ', milliseconds: ', CAST(ROUND(EXTRACT(MILLISECONDS FROM t_diff)) AS text)) AS time_difference
+                                           FROM
                                            (
-                                           SELECT year,
-                                           CAST(CONCAT(year, '-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp) AS full_date,
-                                           LEAD(CAST(CONCAT(year, '-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp)) 
-                                           OVER (ORDER BY year, month, day) AS lead_full_date
+                                           WITH comb_date AS 
+                                           (
+                                           SELECT year, CAST(CONCAT(year, '-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp) AS full_date
                                            FROM 
-                                           dim_date_times
-                                           )
-                                           SELECT year,
-                                           CONCAT( CAST(ROUND(AVG(EXTRACT(EPOCH FROM (lead_full_date - full_date)) / 3600)) AS text), ' hours, ',
-                                                   CAST(ROUND(AVG(EXTRACT(EPOCH FROM (lead_full_date - full_date)) % 3600 / 60)) AS text), ' minutes, ',
-                                                   CAST(ROUND(AVG(EXTRACT(EPOCH FROM (lead_full_date - full_date)) % 60)) AS text), ' seconds'
-                                           ) AS avg_time_diff
-                                           FROM 
-                                           comb_dates
-                                           GROUP BY 
-                                           year
+                                           dim_date_times 
                                            ORDER BY 
-                                           avg_time_diff DESC
-                                           LIMIT 5;'''))
+                                           full_date
+                                           ),
+                                           comb_date_next AS 
+                                           (
+                                           SELECT year, CAST(CONCAT(year, '-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp) AS f_date,
+                                           LEAD(CAST(CONCAT(year, '-', month, '-', day, ' ', dim_date_times.timestamp) AS timestamp)) OVER (ORDER BY year, month, day) AS lead_full_date
+                                           FROM dim_date_times  
+                                           ORDER BY f_date
+                                           )
+                                           SELECT comb_date.year, AVG(comb_date_next.lead_full_date - comb_date.full_date) AS t_diff
+                                           FROM comb_date
+                                           INNER JOIN comb_date_next ON comb_date.full_date = comb_date_next.f_date
+                                           GROUP BY comb_date.year
+                                           ORDER BY t_diff DESC
+                                           LIMIT 5);'''))
             # Fetching Query Results
             results = q9.fetchall()
             # Printing Each Row
